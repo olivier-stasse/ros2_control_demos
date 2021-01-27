@@ -109,12 +109,12 @@ return_type RRBotSystemQuadrupedHardware::configure(
         a_joint_state_inter++)
     {
       std::string joint_state_inter_name=a_joint_state_inter->name;
-      
+
       // Check if the state interface is inside the list
       if (quad_list_of_state_inter.find(joint_state_inter_name) ==
           quad_list_of_state_inter.end())
       {
-        
+
         RCLCPP_FATAL(
             rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
             "Joint '%s' have %s state interface. "
@@ -134,7 +134,7 @@ return_type RRBotSystemQuadrupedHardware::configure(
       }
     }
   }
-  
+
   status_ = hardware_interface::status::CONFIGURED;
   RCLCPP_INFO(
             rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
@@ -165,14 +165,14 @@ RRBotSystemQuadrupedHardware::export_state_interfaces()
         hardware_interface::StateInterface(
             info_.joints[i].name, HW_IF_GAINS_KP,
             &hw_states_[i].effort));
-    
+
     state_interfaces.emplace_back(
         hardware_interface::StateInterface(
             info_.joints[i].name, HW_IF_GAINS_KD,
             &hw_states_[i].effort));
 
   }
-  
+
   return state_interfaces;
 }
 
@@ -201,7 +201,7 @@ RRBotSystemQuadrupedHardware::export_command_interfaces()
         hardware_interface::CommandInterface(
             info_.joints[i].name, HW_IF_GAINS_KD,
             &hw_commands_[i].Kd));
-    
+
   }
 
   return command_interfaces;
@@ -227,7 +227,7 @@ return_type RRBotSystemQuadrupedHardware::start()
       hw_states_[i] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
       hw_commands_[i] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
     }
-    
+
   }
 
   status_ = hardware_interface::status::STARTED;

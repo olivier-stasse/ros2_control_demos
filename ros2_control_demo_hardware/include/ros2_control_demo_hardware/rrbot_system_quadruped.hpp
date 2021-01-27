@@ -106,7 +106,7 @@ private:
   std::vector<PosVelEffortGains> hw_states_;
 };
 
-}
+} // namespace quadruped
 
 }  // namespace ros2_control_demo_hardware
 
