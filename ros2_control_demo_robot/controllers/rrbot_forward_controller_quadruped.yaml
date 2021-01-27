@@ -1,0 +1,27 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 2  # Hz
+
+    forward_command_controller_position:
+      type: forward_command_controller/ForwardCommandController
+
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+
+forward_command_controller_position:
+  ros__parameters:
+    joints:
+      - FL_HFE
+      - FL_KFE
+      - FL_ANKLE
+      - FR_HFE      
+      - FR_KFE
+      - FR_ANKLE
+      - HL_HFE
+      - HL_KFE
+      - HL_ANKLE
+      - HR_HFE      
+      - HR_KFE
+      - HR_ANKLE
+    interface_name: position
+
