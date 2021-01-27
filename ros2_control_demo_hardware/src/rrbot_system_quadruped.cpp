@@ -19,6 +19,7 @@
 #include <limits>
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -77,8 +78,7 @@ return_type RRBotSystemQuadrupedHardware::configure(
         // If not then generate an error message
         RCLCPP_FATAL(
             rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-            "Joint '%s' have %s command interfaces found."
-            "One of the following values is expected",
+            "Joint '%s' have %s command interfaces found. One of the following values is expected",
             joint.name.c_str(),
             a_joint_cmd_inter->name.c_str());
         for(auto a_cmd_inter = quad_list_of_cmd_inter.begin();
@@ -87,7 +87,7 @@ return_type RRBotSystemQuadrupedHardware::configure(
         {
           RCLCPP_FATAL(
               rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-              "'%s' expected.",a_cmd_inter->c_str());
+              "'%s' expected.", a_cmd_inter->c_str());
         }
         return return_type::ERROR;
       }
@@ -108,17 +108,15 @@ return_type RRBotSystemQuadrupedHardware::configure(
         a_joint_state_inter != joint.state_interfaces.end();
         a_joint_state_inter++)
     {
-      std::string joint_state_inter_name=a_joint_state_inter->name;
+      std::string joint_state_inter_name = a_joint_state_inter->name;
 
       // Check if the state interface is inside the list
       if (quad_list_of_state_inter.find(joint_state_inter_name) ==
           quad_list_of_state_inter.end())
       {
-
         RCLCPP_FATAL(
             rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-            "Joint '%s' have %s state interface. "
-            "One of the following was expected: ",
+            "Joint '%s' have %s state interface. One of the following was expected: ",
             joint.name.c_str(),
             a_joint_state_inter->name.c_str());
 
@@ -128,7 +126,7 @@ return_type RRBotSystemQuadrupedHardware::configure(
         {
           RCLCPP_FATAL(
               rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-              "'%s' expected.",a_state_inter->c_str());
+              "'%s' expected.", a_state_inter->c_str());
         }
         return return_type::ERROR;
       }
@@ -170,7 +168,6 @@ RRBotSystemQuadrupedHardware::export_state_interfaces()
         hardware_interface::StateInterface(
             info_.joints[i].name, HW_IF_GAINS_KD,
             &hw_states_[i].effort));
-
   }
 
   return state_interfaces;
@@ -201,7 +198,6 @@ RRBotSystemQuadrupedHardware::export_command_interfaces()
         hardware_interface::CommandInterface(
             info_.joints[i].name, HW_IF_GAINS_KD,
             &hw_commands_[i].Kd));
-
   }
 
   return command_interfaces;
@@ -303,7 +299,7 @@ RRBotSystemQuadrupedHardware::write()
   return return_type::OK;
 }
 
-}
+}  // namespace quadruped
 
 }  // namespace ros2_control_demo_hardware
 

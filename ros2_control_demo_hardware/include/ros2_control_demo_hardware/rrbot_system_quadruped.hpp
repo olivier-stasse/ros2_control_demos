@@ -94,7 +94,6 @@ public:
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   return_type write() override;
 
-  
 private:
   // Parameters for the RRBot simulation
   double hw_start_sec_;
@@ -106,7 +105,7 @@ private:
   std::vector<PosVelEffortGains> hw_states_;
 };
 
-} // namespace quadruped
+}  // namespace quadruped
 
 }  // namespace ros2_control_demo_hardware
 
