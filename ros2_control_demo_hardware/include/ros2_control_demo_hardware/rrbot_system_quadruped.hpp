@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "rclcpp/macros.hpp"
 
@@ -35,6 +36,9 @@ using hardware_interface::return_type;
 namespace ros2_control_demo_hardware
 {
 
+namespace quadruped
+{
+
 struct PosVelEffortGains
 {
   double position;
@@ -42,8 +46,27 @@ struct PosVelEffortGains
   double effort;
   double Kp;
   double Kd;
-}
-  
+};
+
+constexpr const auto HW_IF_GAINS_KP = "gain_kp";
+constexpr const auto HW_IF_GAINS_KD = "gain_kd";
+
+std::set<std::string> quad_list_of_cmd_inter {
+  "position",
+  "velocity",
+  "effort",
+  "gain_kp",
+  "gain_kd"
+};
+
+std::set<std::string> quad_list_of_state_inter {
+  "position",
+  "velocity",
+  "effort",
+  "gain_kp",
+  "gain_kd"
+};
+
 class RRBotSystemQuadrupedHardware : public
   hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
@@ -71,7 +94,6 @@ public:
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   return_type write() override;
 
-  constexpr const auto HW_PVEG = "pos_vel_effort_gains";
   
 private:
   // Parameters for the RRBot simulation
@@ -83,6 +105,8 @@ private:
   std::vector<PosVelEffortGains> hw_commands_;
   std::vector<PosVelEffortGains> hw_states_;
 };
+
+}
 
 }  // namespace ros2_control_demo_hardware
 

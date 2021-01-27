@@ -21,3 +21,13 @@
     </description>
   </class>
 </library>
+
+<library path="ros2_control_demo_hardware">
+  <class name="ros2_control_demo_hardware/RRBotSystemQuadrupedHardware"
+         type="ros2_control_demo_hardware::quadruped::RRBotSystemQuadrupedHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      A ROS2 Control quadruped robot protocol. This is an example for using an extended robot interface.
+    </description>
+  </class>
+</library>

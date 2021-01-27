@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(ros2_control_demo_hardware)
 
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -23,6 +25,7 @@ add_library(
   src/diffbot_system.cpp
   src/rrbot_system_position_only.cpp
   src/rrbot_system_multi_interface.cpp
+  src/rrbot_system_quadruped.cpp
 )
 target_include_directories(
   ${PROJECT_NAME}
