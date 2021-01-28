@@ -223,7 +223,6 @@ return_type RRBotSystemQuadrupedHardware::start()
       hw_states_[i] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
       hw_commands_[i] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
     }
-
   }
 
   status_ = hardware_interface::status::STARTED;
