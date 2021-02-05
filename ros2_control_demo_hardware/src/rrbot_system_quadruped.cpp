@@ -269,12 +269,12 @@ hardware_interface::return_type RRBotSystemQuadrupedHardware::read()
   for (uint i = 0; i < hw_states_.size(); i++) {
     // Simulate RRBotQuadruped's PD+ computation
     hw_states_[i].effort = hw_commands_[i].effort +
-        hw_commands_[i].Kp*
-        (hw_states_[i].position -
-         hw_commands_[i].position) +
-        hw_commands_[i].Kd*
-        (hw_states_[i].velocity -
-         hw_commands_[i].velocity);
+      hw_commands_[i].Kp*
+      (hw_states_[i].position -
+       hw_commands_[i].position) +
+      hw_commands_[i].Kd*
+      (hw_states_[i].velocity -
+       hw_commands_[i].velocity);
 
     //
     RCLCPP_INFO(
