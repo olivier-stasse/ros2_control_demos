@@ -267,11 +267,16 @@ hardware_interface::return_type RRBotSystemQuadrupedHardware::read()
     "Reading...");
 
   for (uint i = 0; i < hw_states_.size(); i++) {
-    // Simulate RRBot's movement
-    hw_states_[i].position = hw_commands_[i].position +
-      (hw_states_[i].position -
-      hw_commands_[i].position) /
-      hw_slowdown_;
+    // Simulate RRBotQuadruped's PD+ computation
+    hw_states_[i].effort = hw_commands_[i].effort +
+        hw_commands_[i].Kp*
+        (hw_states_[i].position -
+         hw_commands_[i].position) +
+        hw_commands_[i].Kd*
+        (hw_states_[i].velocity -
+         hw_commands_[i].velocity);
+
+    //
     RCLCPP_INFO(
       rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
       "Got state %.5f for joint %d!", hw_states_[i], i);
