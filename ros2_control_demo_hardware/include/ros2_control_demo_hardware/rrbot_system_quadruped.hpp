@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef ROS2_CONTROL_DEMO_HARDWARE__RRBOT_SYSTEM_QUADRUPED_HPP_
 #define ROS2_CONTROL_DEMO_HARDWARE__RRBOT_SYSTEM_QUADRUPED_HPP_
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
-#include "rclcpp/macros.hpp"
 
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/system_interface.hpp"
