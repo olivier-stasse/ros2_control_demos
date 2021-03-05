@@ -6,11 +6,10 @@ Copied and modified from https://github.com/open-dynamic-robot-initiative/robot_
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="quadruped_robot">
 
   <!-- Import RRBot macro -->
-  <xacro:include filename="rrbot/rrbot_quadruped.urdf.xacro" />
+  <xacro:include filename="$(find ros2_control_demo_robot)/description/rrbot/rrbot_quadruped.urdf.xacro" />
 
   <!-- Import RRBot ros2_control description -->
-  <xacro:include filename="rrbot/rrbot_system_quadruped.ros2_control.xacro" />
-  <!-- <xacro:include filename="$(find ros2_control_demo_robot)/description/rrbot/rrbot_system_position_only.ros2_control.xacro" /> -->
+  <xacro:include filename="$(find ros2_control_demo_robot)/description/rrbot/rrbot_system_quadruped.ros2_control.xacro" />
 
   <!-- Used for fixing robot -->
   <link name="world"/>
