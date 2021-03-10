@@ -5,6 +5,9 @@ controller_manager:
     forward_command_controller_position:
       type: forward_command_controller/ForwardCommandController
 
+    forward_command_controller_pos_vel_eff_gain:
+      type: forward_command_controller/MultiInterfaceForwardController
+
     joint_state_controller:
       type: joint_state_controller/JointStateController
 
@@ -14,14 +17,78 @@ forward_command_controller_position:
       - FL_HFE
       - FL_KFE
       - FL_ANKLE
-      - FR_HFE      
+      - FR_HFE
       - FR_KFE
       - FR_ANKLE
       - HL_HFE
       - HL_KFE
       - HL_ANKLE
-      - HR_HFE      
+      - HR_HFE
       - HR_KFE
       - HR_ANKLE
     interface_name: position
+
+forward_command_controller_pos_vel_eff_gain:
+  ros__parameters:
+    joints_interfaces:
+      - FL_HFE/position
+      - FL_HFE/velocity
+      - FL_HFE/effort
+      - FL_HFE/gain_kp
+      - FL_HFE/gain_kd
+      - FL_KFE/position
+      - FL_KFE/velocity
+      - FL_KFE/effort
+      - FL_KFE/gain_kp
+      - FL_KFE/gain_kd
+      - FL_ANKLE/position
+      - FL_ANKLE/velocity
+      - FL_ANKLE/effort
+      - FL_ANKLE/gain_kp
+      - FL_ANKLE/gain_kd
+      - FR_HFE/position
+      - FR_HFE/velocity
+      - FR_HFE/effort
+      - FR_HFE/gain_kp
+      - FR_HFE/gain_kd
+      - FR_KFE/position
+      - FR_KFE/velocity
+      - FR_KFE/effort
+      - FR_KFE/gain_kp
+      - FR_KFE/gain_kd
+      - FR_ANKLE/position
+      - FR_ANKLE/velocity
+      - FR_ANKLE/effort
+      - FR_ANKLE/gain_kp
+      - FR_ANKLE/gain_kd
+      - HL_HFE/position
+      - HL_HFE/velocity
+      - HL_HFE/effort
+      - HL_HFE/gain_kp
+      - HL_HFE/gain_kd
+      - HL_KFE/position
+      - HL_KFE/velocity
+      - HL_KFE/effort
+      - HL_KFE/gain_kp
+      - HL_KFE/gain_kd
+      - HL_ANKLE/position
+      - HL_ANKLE/velocity
+      - HL_ANKLE/effort
+      - HL_ANKLE/gain_kp
+      - HL_ANKLE/gain_kd
+      - HR_HFE/position
+      - HR_HFE/velocity
+      - HR_HFE/effort
+      - HR_HFE/gain_kp
+      - HR_HFE/gain_kd
+      - HR_KFE/position
+      - HR_KFE/velocity
+      - HR_KFE/effort
+      - HR_KFE/gain_kp
+      - HR_KFE/gain_kd
+      - HR_ANKLE/position
+      - HR_ANKLE/velocity
+      - HR_ANKLE/effort
+      - HR_ANKLE/gain_kp
+      - HR_ANKLE/gain_kd
 

@@ -1,4 +1,4 @@
-// Copyright 2020 ros2_control Development Team
+// Copyright 2021 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "rclcpp/macros.hpp"
 
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/system_interface.hpp"
@@ -46,8 +47,8 @@ struct PosVelEffortGains
   double Kd;
 };
 
-constexpr const auto HW_IF_GAINS_KP = "gain_kp";
-constexpr const auto HW_IF_GAINS_KD = "gain_kd";
+constexpr const auto HW_IF_GAIN_KP = "gain_kp";
+constexpr const auto HW_IF_GAIN_KD = "gain_kd";
 
 std::set<std::string> quad_list_of_cmd_inter {
   "position",
@@ -65,6 +66,14 @@ std::set<std::string> quad_list_of_state_inter {
   "gain_kd"
 };
 
+enum control_mode_t {
+  POSITION,
+  VELOCITY,
+  EFFORT,
+  POS_VEL_EFF_GAINS,
+  NO_VALID_MODE
+};
+
 class RRBotSystemQuadrupedHardware : public
   hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
@@ -73,6 +82,9 @@ public:
 
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   return_type configure(const hardware_interface::HardwareInfo & info) override;
+
+  ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
+  return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override;
 
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
@@ -101,6 +113,7 @@ private:
   // Store the command for the simulated robot
   std::vector<PosVelEffortGains> hw_commands_;
   std::vector<PosVelEffortGains> hw_states_;
+  std::vector<control_mode_t> control_mode_;
 };
 
 }  // namespace quadruped

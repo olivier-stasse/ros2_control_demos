@@ -83,6 +83,13 @@ hardware_interface::return_type RRBotSystemPositionOnlyHardware::configure(
   return hardware_interface::return_type::OK;
 }
 
+return_type
+RRBotSystemPositionOnlyHardware::accept_command_resource_claim
+(const std::vector<std::string> & )
+{
+  return return_type::OK;
+}
+
 std::vector<hardware_interface::StateInterface>
 RRBotSystemPositionOnlyHardware::export_state_interfaces()
 {

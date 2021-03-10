@@ -40,6 +40,9 @@ public:
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
 
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
+  return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override;
+
+  ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
