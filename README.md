@@ -196,3 +196,141 @@ Now you should also see the *RRbot* represented correctly in `rviz2`.
    ```
 
 3. You should also see the *RRbot* moving in `rviz2`.
+The other launch-files have corresponding names to their coresponding example.
+The URDF files can be found in the `description` folder.
+
+## Quadruped
+
+### Testing forward_command_controller_position
+```
+ros2 control load_start_controller forward_command_controller_position
+```
+```
+ros2 control list_controllers
+```
+should display:
+```
+forward_command_controller_position[forward_command_controller/ForwardCommandController] active
+```
+To send a configuration as a command:
+```
+ros2 topic pub /forward_command_controller_position/commands std_msgs/msg/Float64MultiArray "data:
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5"
+```
+This shows:
+```
+[ros2_control_node-1] [INFO] [1615387746.329025405] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 0!
+[ros2_control_node-1] [INFO] [1615387746.329091219] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 1!
+[ros2_control_node-1] [INFO] [1615387746.329116062] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 2!
+[ros2_control_node-1] [INFO] [1615387746.329136179] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 3!
+[ros2_control_node-1] [INFO] [1615387746.329155694] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 4!
+[ros2_control_node-1] [INFO] [1615387746.329175297] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 5!
+[ros2_control_node-1] [INFO] [1615387746.329194826] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 6!
+[ros2_control_node-1] [INFO] [1615387746.329214583] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 7!
+[ros2_control_node-1] [INFO] [1615387746.329234140] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 8!
+[ros2_control_node-1] [INFO] [1615387746.329253699] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 9!
+[ros2_control_node-1] [INFO] [1615387746.329273408] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 10!
+[ros2_control_node-1] [INFO] [1615387746.329293178] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.00000,0.00000,0.00000,0.00000) for joint 11!
+```
+### Testing forward_command_controller_pos_vel_eff_gain
+```
+ros2 control load_start_controller forward_command_controller_pos_vel_eff_gain
+```
+```
+ros2 control list_controllers
+```
+should display:
+```
+forward_command_controller_pos_vel_eff_gain[forward_command_controller/MultiInterfaceForwardController] active
+```
+To send a vector of 12 by 5 values for each joint as a command:
+```
+ros2 topic pub /forward_command_controller_pos_vel_eff_gain/commands std_msgs/msg/Float64MultiArray "data:
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+- 0.5"
+```
+This shows:
+```
+[ros2_control_node-1] [INFO] [1615387604.754789004] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 0!
+[ros2_control_node-1] [INFO] [1615387604.754821608] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 1!
+[ros2_control_node-1] [INFO] [1615387604.754851622] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 2!
+[ros2_control_node-1] [INFO] [1615387604.754881760] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 3!
+[ros2_control_node-1] [INFO] [1615387604.754911264] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 4!
+[ros2_control_node-1] [INFO] [1615387604.754941370] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 5!
+[ros2_control_node-1] [INFO] [1615387604.754971242] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 6!
+[ros2_control_node-1] [INFO] [1615387604.755001059] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 7!
+[ros2_control_node-1] [INFO] [1615387604.755106121] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 8!
+[ros2_control_node-1] [INFO] [1615387604.755142691] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 9!
+[ros2_control_node-1] [INFO] [1615387604.755173353] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 10!
+[ros2_control_node-1] [INFO] [1615387604.755225320] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 11!
+```
+
