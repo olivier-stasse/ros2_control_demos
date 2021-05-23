@@ -29,7 +29,7 @@
     <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://ros2_control_demo_robot/description/meshes/${mesh_ext}/with_foot/solo_body.${mesh_ext}"/>
+          <mesh filename="package://ros2_control_demo_robot/description/rrbot/meshes/${mesh_ext}/with_foot/solo_body.${mesh_ext}"/>
         </geometry>
         <material name="${color_name}">
             <color rgba="${color} ${opacity}"/>

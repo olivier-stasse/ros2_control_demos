@@ -133,6 +133,13 @@ return_type RRBotSystemMultiInterfaceHardware::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
+
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("RRBotSystemMultipleInterfaceHardware"),
+      "Joint'%s' found",joint.name);
+  }
+
   // Prepare for new command modes
   std::vector<integration_lvl_t> new_modes = {};
   for (std::string key : start_interfaces)

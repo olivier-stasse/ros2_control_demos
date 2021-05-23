@@ -20,11 +20,8 @@
       The ros2_control DiffBot example using a system hardware interface-type. It uses velocity command and position state interface. The example is the starting point to implement a hardware interface for differential-drive mobile robots.
     </description>
   </class>
-</library>
-
-
   <class name="ros2_control_demo_hardware/RRBotSystemQuadrupedHardware"
-         type="ros2_control_demo_hardware::quadruped::RRBotSystemQuadrupedHardware"
+         type="ros2_control_demo_hardware::RRBotSystemQuadrupedHardware"
          base_class_type="hardware_interface::SystemInterface">
     <description>
       A ROS2 Control quadruped robot protocol. This is an example for using an extended robot interface.

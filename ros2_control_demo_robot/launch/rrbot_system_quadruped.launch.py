@@ -32,21 +32,36 @@ def generate_launch_description():
     robot_description_config = xacro.process_file(robot_description_path)
     robot_description = {'robot_description': robot_description_config.toxml()}
 
+    # For loading the robot controllers parameters
     rrbot_forward_controller = os.path.join(
         get_package_share_directory('ros2_control_demo_robot'),
-        'controllers',
+        'config',
         'rrbot_forward_controller_quadruped.yaml'
     )
 
-    return LaunchDescription([
-      Node(
+    # Publish the robot state from the joint_state_broadcaster to /tf
+    robot_state_publisher_node = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[robot_description],
+    )
+
+    # Create the controller manager node
+    control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
         parameters=[robot_description, rrbot_forward_controller],
         output={
-          'stdout': 'screen',
-          'stderr': 'screen',
-          },
-        )
+            'stdout': 'screen',
+            'stderr': 'screen',
+        },
+    )
 
-    ])
+
+    return LaunchDescription(
+        [
+            control_node,
+            robot_state_publisher_node
+        ]
+    )
