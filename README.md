@@ -116,7 +116,6 @@ Direct joint commands are sent to this robot via the `ForwardCommandController`.
 The sections below describe their usage.
 Check the [Results](##result) section on how to ensure that things went well.
 
-
 ### JointStateController
 
 Open another terminal and load, configure and start `joint_state_controller`:
@@ -200,6 +199,11 @@ The other launch-files have corresponding names to their coresponding example.
 The URDF files can be found in the `description` folder.
 
 ## Quadruped
+
+### Starting the robot
+   ```
+   ros2 launch ros2_control_demo_robot rrbot_system_position_only.launch.py
+   ```
 
 ### Testing forward_command_controller_position
 ```
@@ -333,4 +337,3 @@ This shows:
 [ros2_control_node-1] [INFO] [1615387604.755173353] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 10!
 [ros2_control_node-1] [INFO] [1615387604.755225320] [RRBotSystemQuadrupedHardware]: Got command (0.50000,0.50000,0.50000,0.50000,0.50000) for joint 11!
 ```
-
