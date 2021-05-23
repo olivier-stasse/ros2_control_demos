@@ -19,7 +19,7 @@
 #include <set>
 #include <string>
 #include <vector>
-
+#include <map>
 #include "rclcpp/macros.hpp"
 
 #include "hardware_interface/base_interface.hpp"
@@ -35,8 +35,6 @@ using hardware_interface::return_type;
 namespace ros2_control_demo_hardware
 {
 
-namespace quadruped
-{
 
 struct PosVelEffortGains
 {
@@ -84,13 +82,15 @@ public:
   return_type configure(const hardware_interface::HardwareInfo & info) override;
 
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
-  return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override;
-
-  ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+
+  ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
+  return_type prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override;
 
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   return_type start() override;
@@ -111,12 +111,10 @@ private:
   double hw_slowdown_;
 
   // Store the command for the simulated robot
-  std::vector<PosVelEffortGains> hw_commands_;
-  std::vector<PosVelEffortGains> hw_states_;
-  std::vector<control_mode_t> control_mode_;
+  std::map<std::string,PosVelEffortGains> hw_commands_;
+  std::map<std::string,PosVelEffortGains> hw_states_;
+  std::map<std::string,control_mode_t> control_mode_;
 };
-
-}  // namespace quadruped
 
 }  // namespace ros2_control_demo_hardware
 

@@ -27,8 +27,6 @@
 namespace ros2_control_demo_hardware
 {
 
-namespace quadruped
-{
 
 return_type RRBotSystemQuadrupedHardware::configure(
   const hardware_interface::HardwareInfo & info)
@@ -40,24 +38,24 @@ return_type RRBotSystemQuadrupedHardware::configure(
   hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
   hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
   hw_slowdown_ = stod(info_.hardware_parameters["example_param_hw_slowdown"]);
-  hw_states_.resize(
-    info_.joints.size(),
-    {std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN()});
-  hw_commands_.resize(
-    info_.joints.size(),
-    {std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN(),
-      std::numeric_limits<double>::quiet_NaN()});
 
-  control_mode_.resize(info_.joints.size());
   // For each joint.
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    hw_states_[joint.name] =
+      {std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN()};
+    hw_commands_[joint.name] =
+      {std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN(),
+       std::numeric_limits<double>::quiet_NaN()};
+    control_mode_[joint.name] = control_mode_t::NO_VALID_MODE;
+
+
     // RRBotSystemQuadruped has exactly 5 doubles for the state and
     // 5 doubles for the command interface on each joint
     if (joint.command_interfaces.size() !=
@@ -135,64 +133,123 @@ return_type RRBotSystemQuadrupedHardware::configure(
     rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
     "Finished configure()");
 
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+      "Joint '%s' configuration.",
+      joint.name.c_str());
+  }
   return return_type::OK;
 }
 
 
 return_type
-RRBotSystemQuadrupedHardware::accept_command_resource_claim
-(const std::vector<std::string> & interfaces)
+RRBotSystemQuadrupedHardware::prepare_command_mode_switch
+(
+ const std::vector<std::string> & start_interfaces,
+ const std::vector<std::string> & stop_interfaces
+ )
 {
+  /// Display info
+  RCLCPP_INFO(
+    rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+    "Going through RRBotSystemQuadrupedHardware::prepare_command_mode_switch");
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+      "Joint'%s' found",joint.name);
+  }
+
   /// Check that the key interfaces are coherent
-  for (auto & key : interfaces) {
+  std::map<std::string,control_mode_t> new_modes = {};
+  for (auto & key : start_interfaces) {
     /// For each joint
-    for (uint i = 0; i < info_.joints.size(); i++) {
-      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-        control_mode_[i] = POSITION;
-        return return_type::OK;                        
-      } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-        control_mode_[i] = VELOCITY;
-        return return_type::OK;                        
-      } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT) {
-        control_mode_[i] = EFFORT;
-        return return_type::OK;                
-      } else if (key == info_.joints[i].name + "/" + ros2_control_demo_hardware::quadruped::HW_IF_GAIN_KP) {
-        control_mode_[i] = POS_VEL_EFF_GAINS;
-        return return_type::OK;                        
-      } else if (key == info_.joints[i].name + "/" + ros2_control_demo_hardware::quadruped::HW_IF_GAIN_KD) {
-        control_mode_[i] = POS_VEL_EFF_GAINS;
-        return return_type::OK;                        
+    for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+
+      if (key == joint.name + "/" + hardware_interface::HW_IF_POSITION)
+	{
+	  new_modes[joint.name]=control_mode_t::POSITION;
+	}
+      if (key == joint.name + "/" + hardware_interface::HW_IF_VELOCITY)
+	{
+	  new_modes[joint.name]=control_mode_t::VELOCITY;
+	}
+      if (key == joint.name + "/" + hardware_interface::HW_IF_EFFORT)
+	{
+	  new_modes[joint.name]=control_mode_t::EFFORT;
+	}
+      if (key == joint.name + "/" + ros2_control_demo_hardware::HW_IF_GAIN_KP)
+	{
+	  new_modes[joint.name]=control_mode_t::POS_VEL_EFF_GAINS;
+	}
+      if (key == joint.name + "/" + ros2_control_demo_hardware::HW_IF_GAIN_KD)
+	{
+	  new_modes[joint.name]=control_mode_t::POS_VEL_EFF_GAINS;
+	}
+    }
+  }
+  // Stop motion on all relevant joints that are stopping
+  for (std::string key : stop_interfaces)
+  {
+    for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+      if (key.find(joint.name) != std::string::npos)
+      {
+        hw_commands_[joint.name].velocity = 0.0;
+        hw_commands_[joint.name].effort = 0.0;
+        control_mode_[joint.name] = control_mode_t::NO_VALID_MODE;  // Revert to undefined
       }
     }
   }
-  return return_type::ERROR;
+  // Set the new command modes
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    if (control_mode_[joint.name] == control_mode_t::NO_VALID_MODE)
+    {
+      // Something else is using the joint! Abort!
+      RCLCPP_ERROR(
+        rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+	"Joint '%s' has no valid control mode",
+	joint.name
+      );
+      return return_type::ERROR;
+    }
+    control_mode_[joint.name] = new_modes[joint.name];
+  }
+
+  return return_type::OK;
 }
 
 std::vector<hardware_interface::StateInterface>
 RRBotSystemQuadrupedHardware::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (uint i = 0; i < info_.joints.size(); i++) {
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION,
-        &hw_states_[i].position));
+        joint.name, hardware_interface::HW_IF_POSITION,
+        &hw_states_[joint.name].position));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
-        &hw_states_[i].velocity));
+        joint.name, hardware_interface::HW_IF_VELOCITY,
+        &hw_states_[joint.name].velocity));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_EFFORT,
-        &hw_states_[i].effort));
+        joint.name, hardware_interface::HW_IF_EFFORT,
+        &hw_states_[joint.name].effort));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        info_.joints[i].name, HW_IF_GAIN_KP,
-        &hw_states_[i].effort));
+        joint.name, HW_IF_GAIN_KP,
+        &hw_states_[joint.name].effort));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        info_.joints[i].name, HW_IF_GAIN_KD,
-        &hw_states_[i].effort));
+        joint.name, HW_IF_GAIN_KD,
+        &hw_states_[joint.name].effort));
+  }
+
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+      "Joint '%s' export_state_interface.",
+      joint.name.c_str());
   }
 
   return state_interfaces;
@@ -202,27 +259,34 @@ std::vector<hardware_interface::CommandInterface>
 RRBotSystemQuadrupedHardware::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  for (uint i = 0; i < info_.joints.size(); i++) {
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION,
-        &hw_commands_[i].position));
+        joint.name, hardware_interface::HW_IF_POSITION,
+        &hw_commands_[joint.name].position));
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
-        &hw_commands_[i].velocity));
+        joint.name, hardware_interface::HW_IF_VELOCITY,
+        &hw_commands_[joint.name].velocity));
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_EFFORT,
-        &hw_commands_[i].effort));
+        joint.name, hardware_interface::HW_IF_EFFORT,
+        &hw_commands_[joint.name].effort));
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
-        info_.joints[i].name, HW_IF_GAIN_KP,
-        &hw_commands_[i].Kp));
+        joint.name, HW_IF_GAIN_KP,
+        &hw_commands_[joint.name].Kp));
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
-        info_.joints[i].name, HW_IF_GAIN_KD,
-        &hw_commands_[i].Kd));
+        joint.name, HW_IF_GAIN_KD,
+        &hw_commands_[joint.name].Kd));
+  }
+
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+      "Joint '%s' export_command_interface.",
+      joint.name.c_str());
   }
 
   return command_interfaces;
@@ -243,10 +307,10 @@ return_type RRBotSystemQuadrupedHardware::start()
   }
 
   // set some default values
-  for (auto i = 0; i < hw_states_.size(); ++i) {
-    if (std::isnan(hw_states_[i].position)) {
-      hw_states_[i] = {0.0, 0.0, 0.0, 0.0, 0.0};
-      hw_commands_[i] = {0.0, 0.0, 0.0, 0.0, 0.0};
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+    if (std::isnan(hw_states_[joint.name].position)) {
+      hw_states_[joint.name] = {0.0, 0.0, 0.0, 0.0, 0.0};
+      hw_commands_[joint.name] = {0.0, 0.0, 0.0, 0.0, 0.0};
     }
   }
 
@@ -283,28 +347,29 @@ return_type RRBotSystemQuadrupedHardware::stop()
 
 hardware_interface::return_type RRBotSystemQuadrupedHardware::read()
 {
-  RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-    "Reading...");
-
-  for (uint i = 0; i < hw_states_.size(); i++) {
+  // RCLCPP_INFO(
+  //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+  //   "Reading...");
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     // Simulate RRBotQuadruped's PD+ computation
-    hw_states_[i].effort = hw_commands_[i].effort +
-      hw_commands_[i].Kp*
-      (hw_states_[i].position -
-       hw_commands_[i].position) +
-      hw_commands_[i].Kd*
-      (hw_states_[i].velocity -
-       hw_commands_[i].velocity);
+    hw_states_[joint.name].effort = hw_commands_[joint.name].effort +
+      hw_commands_[joint.name].Kp*
+      (hw_states_[joint.name].position -
+       hw_commands_[joint.name].position) +
+      hw_commands_[joint.name].Kd*
+      (hw_states_[joint.name].velocity -
+       hw_commands_[joint.name].velocity);
 
     //
-    RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-      "Got state %.5f for joint %d!", hw_states_[i], i);
+    // RCLCPP_INFO(
+    //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+    //   "Got state (%.5f,%.5f,%.5f) for joint %d!",
+    //   hw_states_[i].position, hw_states_[i].velocity,
+    //   hw_states_[i].effort, i);
   }
-  RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-    "Joints sucessfully read!");
+  // RCLCPP_INFO(
+  //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+  //   "Joints sucessfully read!");
 
   return return_type::OK;
 }
@@ -312,36 +377,33 @@ hardware_interface::return_type RRBotSystemQuadrupedHardware::read()
 hardware_interface::return_type
 RRBotSystemQuadrupedHardware::write()
 {
-  RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-    "Writing...");
-
-  for (uint i = 0; i < hw_commands_.size(); i++) {
+  // RCLCPP_INFO(
+  //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+  //   "Writing...");
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     // Simulate sending commands to the hardware
-    RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-      "Got command (%.5f,%.5f,%.5f,%.5f,%.5f) for joint %d!",
-      hw_commands_[i].position,
-      hw_commands_[i].velocity,
-      hw_commands_[i].effort,
-      hw_commands_[i].Kp,
-      hw_commands_[i].Kd,
-      i);
+    // RCLCPP_INFO(
+    //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+    //   "Got command (%.5f,%.5f,%.5f,%.5f,%.5f) for joint %d!",
+    //   hw_commands_[i].position,
+    //   hw_commands_[i].velocity,
+    //   hw_commands_[i].effort,
+    //   hw_commands_[i].Kp,
+    //   hw_commands_[i].Kd,
+    //   i);
   }
-  RCLCPP_INFO(
-    rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-    "Joints sucessfully written!");
+  // RCLCPP_INFO(
+  //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+  //   "Joints sucessfully written!");
 
   return return_type::OK;
 }
-
-}  // namespace quadruped
 
 }  // namespace ros2_control_demo_hardware
 
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  ros2_control_demo_hardware::quadruped::RRBotSystemQuadrupedHardware,
+  ros2_control_demo_hardware::RRBotSystemQuadrupedHardware,
   hardware_interface::SystemInterface
 )
