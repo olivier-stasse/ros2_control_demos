@@ -104,6 +104,9 @@ public:
   ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
   return_type write() override;
 
+  ROS2_CONTROL_DEMO_HARDWARE_PUBLIC
+  return_type display();
+
 private:
   // Parameters for the RRBot simulation
   double hw_start_sec_;
@@ -114,6 +117,8 @@ private:
   std::map<std::string,PosVelEffortGains> hw_commands_;
   std::map<std::string,PosVelEffortGains> hw_states_;
   std::map<std::string,control_mode_t> control_mode_;
+
+  std::map<std::string,control_mode_t> new_modes_;
 };
 
 }  // namespace ros2_control_demo_hardware

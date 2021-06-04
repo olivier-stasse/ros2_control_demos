@@ -131,7 +131,7 @@ return_type RRBotSystemQuadrupedHardware::configure(
   status_ = hardware_interface::status::CONFIGURED;
   RCLCPP_INFO(
     rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-    "Finished configure()");
+    "Finished configure() %p",this);
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     RCLCPP_INFO(
@@ -150,41 +150,45 @@ RRBotSystemQuadrupedHardware::prepare_command_mode_switch
  const std::vector<std::string> & stop_interfaces
  )
 {
-  /// Display info
+
   RCLCPP_INFO(
     rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-    "Going through RRBotSystemQuadrupedHardware::prepare_command_mode_switch");
-  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
-    RCLCPP_INFO(
-      rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-      "Joint'%s' found",joint.name);
-  }
+    "Going through RRBotSystemQuadrupedHardware::prepare_command_mode_switch %d",
+    start_interfaces.size());
+
+  // Initialize new modes.
+  for (const hardware_interface::ComponentInfo & joint : info_.joints)
+    new_modes_[joint.name] = control_mode_t::NO_VALID_MODE;
 
   /// Check that the key interfaces are coherent
-  std::map<std::string,control_mode_t> new_modes = {};
   for (auto & key : start_interfaces) {
+    RCLCPP_INFO(rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+		"prepare_command_mode_switch %s",key.c_str());
+
     /// For each joint
     for (const hardware_interface::ComponentInfo & joint : info_.joints) {
-
       if (key == joint.name + "/" + hardware_interface::HW_IF_POSITION)
 	{
-	  new_modes[joint.name]=control_mode_t::POSITION;
+	  new_modes_[joint.name]=control_mode_t::POSITION;
+	  RCLCPP_INFO(rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
+		      "%s switch to position",key.c_str());
+
 	}
       if (key == joint.name + "/" + hardware_interface::HW_IF_VELOCITY)
 	{
-	  new_modes[joint.name]=control_mode_t::VELOCITY;
+	  new_modes_[joint.name]=control_mode_t::VELOCITY;
 	}
       if (key == joint.name + "/" + hardware_interface::HW_IF_EFFORT)
 	{
-	  new_modes[joint.name]=control_mode_t::EFFORT;
+	  new_modes_[joint.name]=control_mode_t::EFFORT;
 	}
       if (key == joint.name + "/" + ros2_control_demo_hardware::HW_IF_GAIN_KP)
 	{
-	  new_modes[joint.name]=control_mode_t::POS_VEL_EFF_GAINS;
+	  new_modes_[joint.name]=control_mode_t::POS_VEL_EFF_GAINS;
 	}
       if (key == joint.name + "/" + ros2_control_demo_hardware::HW_IF_GAIN_KD)
 	{
-	  new_modes[joint.name]=control_mode_t::POS_VEL_EFF_GAINS;
+	  new_modes_[joint.name]=control_mode_t::POS_VEL_EFF_GAINS;
 	}
     }
   }
@@ -202,17 +206,21 @@ RRBotSystemQuadrupedHardware::prepare_command_mode_switch
   }
   // Set the new command modes
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
-    if (control_mode_[joint.name] == control_mode_t::NO_VALID_MODE)
+    if ((control_mode_[joint.name] == control_mode_t::NO_VALID_MODE) &&
+	(new_modes_[joint.name]==control_mode_t::NO_VALID_MODE))
     {
       // Something else is using the joint! Abort!
       RCLCPP_ERROR(
         rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
-	"Joint '%s' has no valid control mode",
-	joint.name
+	"Joint '%s' has no valid control mode %d %d",
+	joint.name.c_str(),
+	control_mode_[joint.name],
+	new_modes_[joint.name]
+
       );
       return return_type::ERROR;
     }
-    control_mode_[joint.name] = new_modes[joint.name];
+    control_mode_[joint.name] = new_modes_[joint.name];
   }
 
   return return_type::OK;
@@ -351,15 +359,36 @@ hardware_interface::return_type RRBotSystemQuadrupedHardware::read()
   //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
   //   "Reading...");
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
-    // Simulate RRBotQuadruped's PD+ computation
-    hw_states_[joint.name].effort = hw_commands_[joint.name].effort +
-      hw_commands_[joint.name].Kp*
-      (hw_states_[joint.name].position -
-       hw_commands_[joint.name].position) +
-      hw_commands_[joint.name].Kd*
-      (hw_states_[joint.name].velocity -
-       hw_commands_[joint.name].velocity);
-
+    switch(control_mode_[joint.name]) {
+    case control_mode_t::POS_VEL_EFF_GAINS:
+      // Simulate RRBotQuadruped's PD+ computation
+      hw_states_[joint.name].effort = hw_commands_[joint.name].effort +
+	hw_commands_[joint.name].Kp*
+	(hw_states_[joint.name].position -
+	 hw_commands_[joint.name].position) +
+	hw_commands_[joint.name].Kd*
+	(hw_states_[joint.name].velocity -
+	 hw_commands_[joint.name].velocity);
+      break;
+    case control_mode_t::POSITION:
+      hw_states_[joint.name].position =
+	hw_commands_[joint.name].position;
+      break;
+    case control_mode_t::VELOCITY:
+      hw_states_[joint.name].position =
+	hw_states_[joint.name].position +
+	hw_slowdown_ * hw_states_[joint.name].velocity;
+      hw_states_[joint.name].velocity =
+	hw_commands_[joint.name].velocity;
+      break;
+    case control_mode_t::EFFORT:
+      hw_states_[joint.name].effort =
+	hw_commands_[joint.name].effort;
+      break;
+    case control_mode_t::NO_VALID_MODE:
+      hw_states_[joint.name].effort = 0.0;
+      break;
+    }
     //
     // RCLCPP_INFO(
     //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
@@ -377,10 +406,12 @@ hardware_interface::return_type RRBotSystemQuadrupedHardware::read()
 hardware_interface::return_type
 RRBotSystemQuadrupedHardware::write()
 {
+  // This part of the code sends command to the real robot.
+
   // RCLCPP_INFO(
   //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
   //   "Writing...");
-  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
+  //  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     // Simulate sending commands to the hardware
     // RCLCPP_INFO(
     //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
@@ -391,7 +422,7 @@ RRBotSystemQuadrupedHardware::write()
     //   hw_commands_[i].Kp,
     //   hw_commands_[i].Kd,
     //   i);
-  }
+  // }
   // RCLCPP_INFO(
   //   rclcpp::get_logger("RRBotSystemQuadrupedHardware"),
   //   "Joints sucessfully written!");
